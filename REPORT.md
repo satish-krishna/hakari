@@ -11,73 +11,6 @@ Metric: gross real-world input tokens (fixed per-request overhead included), fro
 >
 > The corpus contains 1 sample(s) not in this run: `code-3`. Re-run `npm run experiment`, then `npm run report`, to include them.
 
-## Input index (the actual text measured)
-
-### `english-1` — english · 193 chars
-
-```text
-The quick brown fox jumps over the lazy dog. Tokenizers split this ordinary English sentence into subword units, and the exact number of units depends on the model that produced the vocabulary.
-```
-
-### `english-2` — english · 171 chars
-
-```text
-Prompt engineering is less about clever wording and more about giving the model the context it needs. A well-scoped request beats a long, meandering one every single time.
-```
-
-### `code-1` — code · 190 chars
-
-```
-export function fibonacci(n: number): number {
-  if (n < 2) return n;
-  let a = 0, b = 1;
-  for (let i = 2; i <= n; i++) {
-    const next = a + b;
-    a = b;
-    b = next;
-  }
-  return b;
-}
-
-```
-
-### `code-2` — code · 196 chars
-
-```
-def merge_sort(items):
-    if len(items) <= 1:
-        return items
-    mid = len(items) // 2
-    left = merge_sort(items[:mid])
-    right = merge_sort(items[mid:])
-    return _merge(left, right)
-
-```
-
-### `json-1` — json · 119 chars
-
-```json
-{"id":1042,"name":"Ada Lovelace","roles":["author","analyst"],"active":true,"scores":{"math":98,"logic":100},"tags":[]}
-```
-
-### `json-2` — json · 113 chars
-
-```json
-{"orders":[{"sku":"A-1","qty":3,"price":19.99},{"sku":"B-7","qty":1,"price":249.0}],"currency":"USD","meta":null}
-```
-
-### `non-english-1` — non-english · 64 chars
-
-```text
-東京は日本の首都であり、世界で最も人口の多い都市圏のひとつです。トークナイザーは、こうした文章をどのように分割するのでしょうか。
-```
-
-### `non-english-2` — non-english · 165 chars
-
-```text
-Les modèles de langage découpent le texte en unités plus petites. Cette phrase en français, avec ses accents, illustre comment la tokenisation varie selon la langue.
-```
-
 ## Token counts (gross)
 
 Rows are samples; columns are models. Values include the fixed per-request overhead.
@@ -153,6 +86,73 @@ Total input tokens times each model's cached input price. Models that tokenize i
 | claude-opus-4-6 | 476 | $5 | $0.00238000 |
 | claude-sonnet-4-6 | 476 | $3 | $0.00142800 |
 | claude-haiku-4-5 | 476 | $1 | $0.00047600 |
+
+## Appendix — input index (the actual text measured)
+
+### `english-1` — english · 193 chars
+
+```text
+The quick brown fox jumps over the lazy dog. Tokenizers split this ordinary English sentence into subword units, and the exact number of units depends on the model that produced the vocabulary.
+```
+
+### `english-2` — english · 171 chars
+
+```text
+Prompt engineering is less about clever wording and more about giving the model the context it needs. A well-scoped request beats a long, meandering one every single time.
+```
+
+### `code-1` — code · 190 chars
+
+```
+export function fibonacci(n: number): number {
+  if (n < 2) return n;
+  let a = 0, b = 1;
+  for (let i = 2; i <= n; i++) {
+    const next = a + b;
+    a = b;
+    b = next;
+  }
+  return b;
+}
+
+```
+
+### `code-2` — code · 196 chars
+
+```
+def merge_sort(items):
+    if len(items) <= 1:
+        return items
+    mid = len(items) // 2
+    left = merge_sort(items[:mid])
+    right = merge_sort(items[mid:])
+    return _merge(left, right)
+
+```
+
+### `json-1` — json · 119 chars
+
+```json
+{"id":1042,"name":"Ada Lovelace","roles":["author","analyst"],"active":true,"scores":{"math":98,"logic":100},"tags":[]}
+```
+
+### `json-2` — json · 113 chars
+
+```json
+{"orders":[{"sku":"A-1","qty":3,"price":19.99},{"sku":"B-7","qty":1,"price":249.0}],"currency":"USD","meta":null}
+```
+
+### `non-english-1` — non-english · 64 chars
+
+```text
+東京は日本の首都であり、世界で最も人口の多い都市圏のひとつです。トークナイザーは、こうした文章をどのように分割するのでしょうか。
+```
+
+### `non-english-2` — non-english · 165 chars
+
+```text
+Les modèles de langage découpent le texte en unités plus petites. Cette phrase en français, avec ses accents, illustre comment la tokenisation varie selon la langue.
+```
 
 ## Caveats
 

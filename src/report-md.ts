@@ -95,24 +95,6 @@ export function buildReportMarkdown(data: ResultsFile, corpus: Map<string, Corpu
     push();
   }
 
-  // === Input index ===
-  push('## Input index (the actual text measured)');
-  push();
-  for (const s of runSamples) {
-    const entry = corpus.get(s.id);
-    const chars = entry ? [...entry.text].length : 0;
-    push(`### \`${s.id}\` — ${s.category}${entry ? ` · ${chars} chars` : ''}`);
-    push();
-    if (entry) {
-      push('```' + fenceLang(s.category));
-      push(entry.text);
-      push('```');
-    } else {
-      push('_(text unavailable — sample not in current corpus)_');
-    }
-    push();
-  }
-
   // === Token matrix ===
   push('## Token counts (gross)');
   push();
@@ -278,6 +260,24 @@ export function buildReportMarkdown(data: ResultsFile, corpus: Map<string, Corpu
     push(`| ${m.id} | ${tokens} | $${m.inputPricePerMillion} | $${dollars.toFixed(8)} |`);
   }
   push();
+
+  // === Appendix: input index ===
+  push('## Appendix — input index (the actual text measured)');
+  push();
+  for (const s of runSamples) {
+    const entry = corpus.get(s.id);
+    const chars = entry ? [...entry.text].length : 0;
+    push(`### \`${s.id}\` — ${s.category}${entry ? ` · ${chars} chars` : ''}`);
+    push();
+    if (entry) {
+      push('```' + fenceLang(s.category));
+      push(entry.text);
+      push('```');
+    } else {
+      push('_(text unavailable — sample not in current corpus)_');
+    }
+    push();
+  }
 
   // === Caveats ===
   push('## Caveats');

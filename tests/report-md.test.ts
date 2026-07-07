@@ -35,7 +35,7 @@ describe('buildReportMarkdown', () => {
   const md = buildReportMarkdown(data, corpus);
 
   it('includes the input index with the actual sample text', () => {
-    expect(md).toContain('## Input index');
+    expect(md).toContain('input index (the actual text measured)');
     expect(md).toContain('`s1` — english');
     expect(md).toContain('hello world');
     expect(md).toContain('const x = 1;');
