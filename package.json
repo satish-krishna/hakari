@@ -17,8 +17,7 @@
   "type": "module",
   "description": "",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.110.0",
-    "cross-env": "^10.1.0"
+    "@anthropic-ai/sdk": "^0.110.0"
   },
   "devDependencies": {
     "@types/node": "^26.1.0",
