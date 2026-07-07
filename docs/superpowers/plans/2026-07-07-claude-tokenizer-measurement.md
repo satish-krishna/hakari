@@ -832,6 +832,21 @@ async function main(): Promise<void> {
     throw err;
   }
 
+  // If nothing succeeded, the run failed as a whole (missing credentials,
+  // no connectivity, etc.). Do not write misleading all-ERR output with a
+  // success exit code — surface actionable guidance and exit non-zero.
+  const anySuccess = result.measurements.some((m) => m.tokens !== null);
+  if (!anySuccess) {
+    const firstError = result.measurements.find((m) => m.error)?.error ?? 'unknown error';
+    console.error(
+      '\nRUN FAILED: every measurement errored — no token counts were produced.\n' +
+        'This usually means credentials are missing or cannot reach the count_tokens endpoint.\n' +
+        'Fix: set ANTHROPIC_API_KEY, or run "ant auth login" with API access, then retry.\n' +
+        `First error: ${firstError}\n`,
+    );
+    process.exit(1);
+  }
+
   printMatrix(result);
   printClusters(result);
   printCategoryTotals(result);
