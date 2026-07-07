@@ -7,8 +7,8 @@ Worktree: none (fresh repo, nothing to isolate)
 - Task 1: complete (commit 393c770, review clean; git-hygiene "Important" adjudicated as accepted — planning docs/ledger belong in repo)
 - Task 2: complete (commit cf87b9b, review clean)
 - Task 3: complete (commit bd684f7, review clean)
-- Task 4: Measurement runner — in progress
-- Task 5: Report analysis — pending
+- Task 4: complete (commit 4a596d7, review clean)
+- Task 5: Report analysis — in progress
 - Task 6: Entry point — pending
 
 ## Minor findings (for final review triage)
