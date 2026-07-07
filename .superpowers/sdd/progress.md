@@ -5,9 +5,9 @@ Worktree: none (fresh repo, nothing to isolate)
 
 ## Tasks
 - Task 1: complete (commit 393c770, review clean; git-hygiene "Important" adjudicated as accepted — planning docs/ledger belong in repo)
-- Task 2: Shared types and corpus — in progress
-- Task 3: Model sweep list and pricing — pending
-- Task 4: Measurement runner — pending
+- Task 2: complete (commit cf87b9b, review clean)
+- Task 3: complete (commit bd684f7, review clean)
+- Task 4: Measurement runner — in progress
 - Task 5: Report analysis — pending
 - Task 6: Entry point — pending
 
