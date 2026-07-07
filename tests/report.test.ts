@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clusterModels, categoryTotals, costTable, toCsv } from '../src/report';
+import { clusterModels, categoryTotals, categoryDeltas, costTable, hasAnySuccess, toCsv } from '../src/report';
 import type { RunResult, Sample, ModelSpec } from '../src/types';
 
 const samples: Sample[] = [
@@ -71,5 +71,55 @@ describe('toCsv', () => {
     expect(lines[0]).toBe('model,sampleId,tokens,error');
     expect(lines).toHaveLength(1 + result.measurements.length);
     expect(lines[1]).toBe('twin-a,s1,10,');
+  });
+});
+
+describe('hasAnySuccess', () => {
+  it('is true when at least one measurement has tokens', () => {
+    expect(hasAnySuccess(result)).toBe(true);
+  });
+  it('is false when every measurement is null', () => {
+    const allNull: RunResult = {
+      overhead: [],
+      measurements: [
+        { model: 'm', sampleId: 's1', tokens: null, error: 'x' },
+        { model: 'm', sampleId: 's2', tokens: null, error: 'y' },
+      ],
+    };
+    expect(hasAnySuccess(allNull)).toBe(false);
+  });
+});
+
+describe('categoryDeltas', () => {
+  it('expresses each cluster as a per-category % delta vs the lightest cluster', () => {
+    const d = categoryDeltas(result, models, samples);
+    expect(d.baselineModels.slice().sort()).toEqual(['twin-a', 'twin-b']);
+    expect(d.comparisons).toHaveLength(1);
+    const other = d.comparisons[0];
+    expect(other.models).toEqual(['other']);
+    expect(other.deltaPct.get('english')).toBeCloseTo(20, 10); // (12-10)/10
+    expect(other.deltaPct.get('code')).toBeCloseTo(25, 10); // (25-20)/20
+  });
+  it('returns no comparisons when there is only one cluster', () => {
+    const single: RunResult = {
+      overhead: [],
+      measurements: [
+        { model: 'twin-a', sampleId: 's1', tokens: 10 },
+        { model: 'twin-a', sampleId: 's2', tokens: 20 },
+      ],
+    };
+    const d = categoryDeltas(single, [models[0]], samples);
+    expect(d.comparisons).toHaveLength(0);
+  });
+});
+
+describe('toCsv escaping', () => {
+  it('quotes fields containing commas and doubles embedded quotes', () => {
+    const r: RunResult = {
+      overhead: [],
+      measurements: [{ model: 'm', sampleId: 's', tokens: null, error: 'oops, "bad"' }],
+    };
+    const csv = toCsv(r);
+    expect(csv.split('\n')[1]).toBe('m,s,,"oops, ""bad"""');
   });
 });

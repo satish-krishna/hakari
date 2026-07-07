@@ -3,8 +3,19 @@ import Anthropic from '@anthropic-ai/sdk';
 import { SAMPLES } from './corpus';
 import { MODELS } from './models';
 import { measureAll, makeAnthropicCounter, AuthError } from './measure';
-import { clusterModels, categoryTotals, costTable, toCsv } from './report';
+import {
+  clusterModels,
+  categoryTotals,
+  categoryDeltas,
+  costTable,
+  hasAnySuccess,
+  toCsv,
+} from './report';
 import type { RunResult } from './types';
+
+function overheadOf(result: RunResult, modelId: string): number | null {
+  return result.overhead.find((o) => o.model === modelId)?.tokens ?? null;
+}
 
 function printMatrix(result: RunResult): void {
   console.log('\n=== Token counts (rows = samples, cols = models) ===');
@@ -22,9 +33,19 @@ function printMatrix(result: RunResult): void {
 
 function printClusters(result: RunResult): void {
   console.log('\n=== Tokenizer clusters (models with identical token vectors) ===');
+  console.log('  [oh=N] = fixed per-request overhead tokens (count of the probe "a").');
+  console.log('  Clustering uses gross tokens. If two clusters differ by a constant offset on');
+  console.log('  every sample equal to their overhead gap, they may actually share a tokenizer.');
   const clusters = clusterModels(result, MODELS, SAMPLES);
   clusters.forEach((c, i) => {
-    console.log(`  Cluster ${i + 1}: ${c.models.join(', ')}`);
+    const members = c.models.map((id) => `${id}[oh=${overheadOf(result, id) ?? 'ERR'}]`).join(', ');
+    console.log(`  Cluster ${i + 1}: ${members}`);
+    const distinctOverheads = new Set(c.models.map((id) => String(overheadOf(result, id))));
+    if (distinctOverheads.size > 1) {
+      console.log(
+        '    WARNING: overhead differs within this cluster — members may use different request scaffolding.',
+      );
+    }
   });
   const clustered = new Set(clusters.flatMap((c) => c.models));
   const incomplete = MODELS.map((m) => m.id).filter((id) => !clustered.has(id));
@@ -42,6 +63,27 @@ function printCategoryTotals(result: RunResult): void {
     const cats = totals.get(model.id);
     const cells = catSet.map((c) => String(cats?.get(c) ?? 0).padStart(14));
     console.log([model.id.padEnd(20), ...cells].join(''));
+  }
+}
+
+function printCategoryDeltas(result: RunResult): void {
+  console.log('\n=== Per-category token delta between clusters (vs the lightest cluster) ===');
+  const delta = categoryDeltas(result, MODELS, SAMPLES);
+  if (delta.baselineModels.length === 0 || delta.comparisons.length === 0) {
+    console.log('  (need at least two complete clusters to compute a delta)');
+    return;
+  }
+  const catSet = [...new Set(SAMPLES.map((s) => s.category))];
+  console.log(`  baseline cluster: ${delta.baselineModels.join(', ')}`);
+  console.log(['  cluster'.padEnd(24), ...catSet.map((c) => c.padStart(12))].join(''));
+  for (const cmp of delta.comparisons) {
+    const cells = catSet.map((c) => {
+      const d = cmp.deltaPct.get(c);
+      const text = d === null || d === undefined ? 'n/a' : `${d >= 0 ? '+' : ''}${d.toFixed(1)}%`;
+      return text.padStart(12);
+    });
+    const label = `  ${cmp.models.join(',')}`.padEnd(24).slice(0, 24);
+    console.log([label, ...cells].join(''));
   }
 }
 
@@ -77,8 +119,7 @@ async function main(): Promise<void> {
   // If nothing succeeded, the run failed as a whole (missing credentials,
   // no connectivity, etc.). Do not write misleading all-ERR output with a
   // success exit code — surface actionable guidance and exit non-zero.
-  const anySuccess = result.measurements.some((m) => m.tokens !== null);
-  if (!anySuccess) {
+  if (!hasAnySuccess(result)) {
     const firstError = result.measurements.find((m) => m.error)?.error ?? 'unknown error';
     console.error(
       '\nRUN FAILED: every measurement errored — no token counts were produced.\n' +
@@ -92,6 +133,7 @@ async function main(): Promise<void> {
   printMatrix(result);
   printClusters(result);
   printCategoryTotals(result);
+  printCategoryDeltas(result);
   printCost(result);
 
   mkdirSync('output', { recursive: true });

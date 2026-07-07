@@ -84,3 +84,53 @@ export function toCsv(result: RunResult): string {
   );
   return [header, ...lines].join('\n');
 }
+
+export function hasAnySuccess(result: RunResult): boolean {
+  return result.measurements.some((m) => m.tokens !== null);
+}
+
+export interface CategoryDelta {
+  baselineModels: string[];
+  baselineTotals: Map<Category, number>;
+  comparisons: Array<{ models: string[]; deltaPct: Map<Category, number | null> }>;
+}
+
+// Per-category percentage delta of each cluster vs the "lightest" cluster
+// (the one with the smallest total tokens). Cluster members share an identical
+// token vector, so the first member represents the cluster. deltaPct is null
+// for a category whose baseline total is 0 (avoids divide-by-zero).
+export function categoryDeltas(
+  result: RunResult,
+  models: ModelSpec[],
+  samples: Sample[],
+): CategoryDelta {
+  const clusters = clusterModels(result, models, samples);
+  const totals = categoryTotals(result, samples, models);
+  const categories = [...new Set(samples.map((s) => s.category))];
+
+  const info = clusters.map((c) => {
+    const cats = totals.get(c.models[0]) ?? new Map<Category, number>();
+    const grand = categories.reduce((a, cat) => a + (cats.get(cat) ?? 0), 0);
+    return { models: c.models, cats, grand };
+  });
+
+  if (info.length === 0) {
+    return { baselineModels: [], baselineTotals: new Map(), comparisons: [] };
+  }
+
+  const baseline = info.reduce((min, c) => (c.grand < min.grand ? c : min), info[0]);
+
+  const comparisons = info
+    .filter((c) => c !== baseline)
+    .map((c) => {
+      const deltaPct = new Map<Category, number | null>();
+      for (const cat of categories) {
+        const base = baseline.cats.get(cat) ?? 0;
+        const val = c.cats.get(cat) ?? 0;
+        deltaPct.set(cat, base === 0 ? null : ((val - base) / base) * 100);
+      }
+      return { models: c.models, deltaPct };
+    });
+
+  return { baselineModels: baseline.models, baselineTotals: baseline.cats, comparisons };
+}
