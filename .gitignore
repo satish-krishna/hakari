@@ -1,2 +1,33 @@
+# Dependencies
 node_modules/
+
+# Experiment output / build artifacts
 output/
+dist/
+build/
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Superpowers build-process artifacts (kept locally, not needed long term)
+.superpowers/
+docs/superpowers/plans/
