@@ -8,7 +8,8 @@
   "scripts": {
     "test": "vitest run",
     "experiment": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "report": "tsx src/generate-report.ts"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +17,8 @@
   "type": "module",
   "description": "",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.110.0"
+    "@anthropic-ai/sdk": "^0.110.0",
+    "cross-env": "^10.1.0"
   },
   "devDependencies": {
     "@types/node": "^26.1.0",

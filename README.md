@@ -89,6 +89,18 @@ A single unavailable model (for example a model your account cannot access, whic
 
 **Files** — `output/results.json` holds the raw matrix, the per-model overhead baselines, and run metadata; `output/results.csv` is the flat matrix for spreadsheet use. The `output/` directory is git-ignored.
 
+## Generating a Markdown report
+
+After a run, turn `output/results.json` into a human-readable report:
+
+```bash
+npm run report
+```
+
+This writes `REPORT.md` and needs no credentials — it only reads the JSON a run already produced. The report includes an **index of the actual inputs used** (every measured sample with its full text), the token matrix, the per-request overhead, both gross and overhead-subtracted (content) clustering, a **near-identical tokenizers** section that flags clusters differing on only one or two samples, the per-category deltas, and the cost table.
+
+The report's input index is keyed off the samples that are actually in `output/results.json`, so it always matches the data. If you add a sample to the corpus but have not re-run the experiment, the report says so and tells you to re-run. The workflow is: `npm run experiment` (needs credentials) then `npm run report`.
+
 ## Caveats
 
 The model IDs in `src/models.ts` and the input prices are **cached as of 2026-06** and include forward-looking model names. Before quoting any real number, verify both the model IDs (some may not exist for your account yet and will show `ERR`) and the per-token prices against current Anthropic pricing.
@@ -101,11 +113,11 @@ The model IDs in `src/models.ts` and the input prices are **cached as of 2026-06
 ## Development
 
 ```bash
-npm test         # run the unit test suite (Vitest)
+npm test           # run the unit test suite (Vitest)
 npm run typecheck  # type-check with tsc --noEmit (no emit)
 ```
 
-The measurement and analysis logic is fully unit-tested without any network access: `measure.ts` takes an injected count function, and `report.ts` is pure. Only `src/index.ts` (the wiring and console output) is exercised by the manual `npm run experiment` run.
+The measurement and analysis logic is fully unit-tested without any network access: `measure.ts` takes an injected count function, and `report.ts` / `report-md.ts` are pure. Only `src/index.ts` and `src/generate-report.ts` (the wiring and file I/O) are exercised by the `npm run experiment` and `npm run report` commands.
 
 ### Project structure
 
@@ -115,6 +127,8 @@ The measurement and analysis logic is fully unit-tested without any network acce
 | `src/corpus.ts` | The fixed input corpus (`SAMPLES`) |
 | `src/models.ts` | The model sweep list and cached pricing (`MODELS`) |
 | `src/measure.ts` | The runner: calls `count_tokens` per model x sample, handles errors and auth |
-| `src/report.ts` | Pure analysis: clustering, category totals, category deltas, cost, CSV |
-| `src/index.ts` | Entry point: wires the SDK, prints tables, writes output files |
-| `tests/` | Vitest unit tests for corpus, models, measure, and report |
+| `src/report.ts` | Pure analysis: clustering, category totals, category deltas, cost, CSV, overhead adjustment |
+| `src/report-md.ts` | Pure Markdown report builder (input index + analysis) |
+| `src/index.ts` | Experiment entry point: wires the SDK, prints tables, writes output files |
+| `src/generate-report.ts` | Report entry point: reads `output/results.json`, writes `REPORT.md` |
+| `tests/` | Vitest unit tests for corpus, models, measure, report, and the report builder |

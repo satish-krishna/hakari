@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clusterModels, categoryTotals, categoryDeltas, costTable, hasAnySuccess, toCsv } from '../src/report';
+import { clusterModels, categoryTotals, categoryDeltas, contentAdjusted, costTable, hasAnySuccess, toCsv } from '../src/report';
 import type { RunResult, Sample, ModelSpec } from '../src/types';
 
 const samples: Sample[] = [
@@ -121,5 +121,26 @@ describe('toCsv escaping', () => {
     };
     const csv = toCsv(r);
     expect(csv.split('\n')[1]).toBe('m,s,,"oops, ""bad"""');
+  });
+});
+
+describe('contentAdjusted', () => {
+  it('subtracts each model overhead from its measurements and preserves nulls', () => {
+    const r: RunResult = {
+      overhead: [
+        { model: 'a', tokens: 5 },
+        { model: 'b', tokens: 10 },
+      ],
+      measurements: [
+        { model: 'a', sampleId: 's1', tokens: 67 },
+        { model: 'b', sampleId: 's1', tokens: 72 },
+        { model: 'a', sampleId: 's2', tokens: null, error: 'x' },
+      ],
+    };
+    const c = contentAdjusted(r);
+    expect(c.measurements.find((m) => m.model === 'a' && m.sampleId === 's1')?.tokens).toBe(62);
+    expect(c.measurements.find((m) => m.model === 'b' && m.sampleId === 's1')?.tokens).toBe(62);
+    expect(c.measurements.find((m) => m.model === 'a' && m.sampleId === 's2')?.tokens).toBeNull();
+    expect(c.overhead).toEqual(r.overhead);
   });
 });

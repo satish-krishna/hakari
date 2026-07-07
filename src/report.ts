@@ -134,3 +134,20 @@ export function categoryDeltas(
 
   return { baselineModels: baseline.models, baselineTotals: baseline.cats, comparisons };
 }
+
+// Return a copy of the run with each model's fixed per-request overhead
+// subtracted from its measurements. Clustering this isolates the tokenizer
+// from request scaffolding: two models that share a tokenizer but wrap
+// requests differently (different overhead) will cluster together here even
+// when they split on gross tokens. A measurement with no token count, or a
+// model with no overhead baseline, stays null. Overhead entries are preserved.
+export function contentAdjusted(result: RunResult): RunResult {
+  const overhead = new Map(result.overhead.map((o) => [o.model, o.tokens]));
+  const measurements = result.measurements.map((m) => {
+    const o = overhead.get(m.model);
+    const tokens =
+      m.tokens === null || o === null || o === undefined ? null : m.tokens - o;
+    return { ...m, tokens };
+  });
+  return { measurements, overhead: result.overhead };
+}
